@@ -1,0 +1,227 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String     @id @default(uuid())
+  name           String     @unique
+  email          String     @unique
+  password       String
+  roleId         String
+  role           Role       @relation(fields: [roleId], references: [id])
+  isPlus         Boolean    @default(false)
+  isSwitchedFree Boolean    @default(false)
+  isSwitchedPlus Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  plan           PlusPlan[]
+  carts          Cart[]
+  orders         Order[]
+  addresses      Address[]
+  store          Store[]
+  ratings        Rating[]
+}
+
+model PlusPlan {
+  id        String   @id @default(ulid())
+  expiredAt DateTime
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Product {
+  id            String              @id @default(ulid())
+  name          String              @unique
+  description   String
+  actualPrice   Float
+  offerPrice    Float?
+  images        Image[]
+  categoryId    String
+  category      Category            @relation(fields: [categoryId], references: [id])
+  quantity      Int                 @default(0)
+  inStock       Boolean             @default(true)
+  storeId       String
+  store         Store               @relation(fields: [storeId], references: [id])
+  createdAt     DateTime            @default(now())
+  carts         Cart[]
+  orders        Order[]
+  ratings       Rating[]
+  notifications NotificationAdmin[]
+}
+
+model Category {
+  id        String    @id @default(ulid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  products  Product[]
+}
+
+model Cart {
+  id        String  @id @default(ulid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+}
+
+model Order {
+  id                 String              @id @default(ulid())
+  createdAt          DateTime            @default(now())
+  userId             String
+  user               User                @relation(fields: [userId], references: [id])
+  productId          String
+  product            Product             @relation(fields: [productId], references: [id])
+  quantity           Int
+  coupon             String?
+  isCouponUsed       Boolean             @default(false)
+  statusId           String
+  status             Status              @relation(fields: [statusId], references: [id])
+  isPaid             Boolean             @default(false)
+  paymentMethod      PaymentMethod
+  notificationsAdmin NotificationAdmin[]
+  notificationsStore NotificationStore[]
+}
+
+model Status {
+  id        String   @id @default(ulid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+enum PaymentMethod {
+  COD
+  STRIPE
+}
+
+model Address {
+  id        String   @id @default(ulid())
+  firstName String
+  lastName  String
+  email     String
+  street    String
+  city      String
+  state     String
+  zip       String
+  country   String
+  phone     String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Rating {
+  id        String   @id @default(ulid())
+  rating    Int
+  review    String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+
+  notifications NotificationStore[]
+
+  @@unique([userId, productId])
+}
+
+model Coupon {
+  id          String   @id @default(ulid())
+  code        String
+  description String
+  discount    Float
+  forNewUser  Boolean
+  forMember   Boolean  @default(false)
+  isPublic    Boolean
+  expiredAt   DateTime
+  createdAt   DateTime @default(now())
+}
+
+model Store {
+  id                 String              @id @default(ulid())
+  userId             String
+  user               User                @relation(fields: [userId], references: [id])
+  name               String
+  description        String
+  username           String              @unique
+  address            String
+  status             String              @default("pending")
+  isActive           Boolean             @default(false)
+  logo               Image[]
+  email              String
+  contact            String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  products           Product[]
+  notifications      NotificationAdmin[]
+  notificationsStore NotificationStore[]
+}
+
+model NotificationAdmin {
+  id        String                @id @default(ulid())
+  type      NotificationAdminType
+  storeId   String?
+  store     Store?                @relation(fields: [storeId], references: [id])
+  productId String?
+  product   Product?              @relation(fields: [productId], references: [id])
+  orderId   String?
+  order     Order?                @relation(fields: [orderId], references: [id])
+  isRead    Boolean               @default(false)
+  isNew     Boolean               @default(true)
+  createdAt DateTime              @default(now())
+}
+
+enum NotificationAdminType {
+  STORE
+  PRODUCT
+  ORDER
+}
+
+model NotificationStore {
+  id        String                @id @default(ulid())
+  type      NotificationStoreType
+  storeId   String
+  store     Store                 @relation(fields: [storeId], references: [id])
+  orderId   String?
+  order     Order?                @relation(fields: [orderId], references: [id])
+  ratingId  String?
+  rating    Rating?               @relation(fields: [ratingId], references: [id])
+  isRead    Boolean               @default(false)
+  isNew     Boolean               @default(true)
+  createdAt DateTime              @default(now())
+}
+
+enum NotificationStoreType {
+  ORDER
+  RATING
+}
+
+model Image {
+  id        String   @id @default(ulid())
+  url       String   @unique
+  createdAt DateTime @default(now())
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  storeId   String?
+  store     Store?   @relation(fields: [storeId], references: [id])
+}
+
+model Role {
+  id        String   @id @default(ulid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  users     User[]
+}
