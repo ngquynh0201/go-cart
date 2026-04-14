@@ -129,7 +129,7 @@ export default function Footer() {
         {
             title: 'LIÊN HỆ',
             links: [
-                { text: '+1-212-456-7890', path: '/', icon: MailIcon },
+                { text: '03482123643', path: '/', icon: MailIcon },
                 { text: 'contact@example.com', path: '/', icon: PhoneIcon },
                 { text: 'Tuy Hoa - VN', path: '/', icon: MapPinIcon },
             ],
