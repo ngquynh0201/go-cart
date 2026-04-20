@@ -130,7 +130,7 @@ export default function Footer() {
             title: 'LIÊN HỆ',
             links: [
                 { text: '03482123643', path: '/', icon: MailIcon },
-                { text: 'contact@example.com', path: '/', icon: PhoneIcon },
+                { text: 'nguyenquynh@gmail.com', path: '/', icon: PhoneIcon },
                 { text: 'Tuy Hoa - VN', path: '/', icon: MapPinIcon },
             ],
         },
